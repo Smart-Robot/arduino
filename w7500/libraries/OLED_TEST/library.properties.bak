@@ -1,0 +1,9 @@
+name=OLED_TEST
+version=1.0
+author=Arduino
+maintainer=Arduino <info@arduino.cc>
+sentence=Serial Peripheral Interface
+paragraph=OLED_TEST for W7500
+category=Signal Input/Output
+url=
+architectures=sam

@@ -1,0 +1,274 @@
+/*
+ * Copyright (c) 2010 by Cristian Maglie <c.maglie@arduino.cc>
+ * Copyright (c) 2014 by Paul Stoffregen <paul@pjrc.com> (Transaction API)
+ * Copyright (c) 2014 by Matthijs Kooijman <matthijs@stdin.nl> (SPISettings AVR)
+ * Copyright (c) 2014 by Andrew J. Kroll <xxxajk@gmail.com> (atomicity fixes)
+ * SPI Master library for arduino.
+ *
+ * This file is free software; you can redistribute it and/or modify
+ * it under the terms of either the GNU General Public License version 2
+ * or the GNU Lesser General Public License version 2.1, both as
+ * published by the Free Software Foundation.
+ */
+
+#ifndef _SPI_H_INCLUDED
+#define _SPI_H_INCLUDED
+
+#include <Arduino.h>
+
+void SSP_SendData_8bit_CH0(uint8_t Data);
+uint32_t SSP_GetTxFlagStatus_CH0(void);
+uint8_t SSP_ReceiveData_8bit_CH0(void);
+uint32_t SSP_GetRxFlagStatus_CH0(void);
+
+
+
+class SPIClass {
+public:
+  // Initialize the SPI library
+  static void begin();
+
+
+////////  inline static void beginTransaction(SPISettings settings) {
+
+////////  }
+
+  // Write to the SPI bus (MOSI pin) and also receive (MISO pin)
+  inline static uint8_t transfer(uint8_t data) {
+        SSP_SendData_8bit_CH0(data);
+        while( SSP_GetTxFlagStatus_CH0() );
+        while( SSP_GetRxFlagStatus_CH0() )
+        {
+            return SSP_ReceiveData_8bit_CH0();
+        }
+        return -1;
+  }
+
+  inline static uint16_t transfer16(uint16_t data) {
+#if 0
+        SSP_SendData_CH0(data);
+    while( SSP_GetFlagStatus_CH0() )
+    {
+        return SSP_ReceiveData_CH0();
+    }
+#endif
+    return -1;
+  }
+  inline static void transfer(void *buf, size_t count) {
+  }
+  // After performing a group of transfers and releasing the chip select
+  // signal, this function allows others to access the SPI bus
+  inline static void endTransaction(void) {
+
+  }
+
+  // Disable the SPI bus
+  static void end();
+
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setBitOrder(uint8_t bitOrder) {
+  }
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setDataMode(uint8_t dataMode) {
+  }
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setClockDivider(uint8_t clockDiv) {
+
+  }
+  // These undocumented functions should not be used.  SPI.transfer()
+  // polls the hardware flag which is automatically cleared as the
+  inline static void attachInterrupt() { /*SPCR |= _BV(SPIE)*/; }
+  inline static void detachInterrupt() { /*SPCR &= ~_BV(SPIE)*/; }
+
+private:
+  static uint8_t interruptMask; // which interrupts to mask
+  static uint8_t interruptSave; // temp storage, to restore state
+  #ifdef SPI_TRANSACTION_MISMATCH_LED
+  static uint8_t inTransactionFlag;
+  #endif
+};
+
+extern SPIClass SPI;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void SSP_SendData_8bit_CH1(unsigned char Data);
+unsigned int SSP_GetTxFlagStatus_CH1(void);
+unsigned short SSP_ReceiveData_8bit_CH1(void);
+unsigned int SSP_GetRxFlagStatus_CH1(void);
+
+
+
+class SPIClass1 {
+public:
+  // Initialize the SPI library
+  static void begin();
+
+
+////////  inline static void beginTransaction(SPISettings settings) {
+
+////////  }
+
+  // Write to the SPI bus (MOSI pin) and also receive (MISO pin)
+  inline static uint8_t transfer(uint8_t data) {
+        SSP_SendData_8bit_CH1(data);
+        while( SSP_GetRxFlagStatus_CH1() )
+        {
+            return SSP_ReceiveData_8bit_CH1();
+        }
+    return -1;
+  }
+
+  inline static uint16_t transfer16(uint16_t data) {
+#if 0
+        SSP_SendData_CH1(data);
+    while( SSP_GetRxFlagStatus_CH1() )
+    {
+        return SSP_ReceiveData_CH1();
+    }
+#endif
+    return -1;
+  }
+  inline static void transfer(void *buf, size_t count) {
+  }
+  // After performing a group of transfers and releasing the chip select
+  // signal, this function allows others to access the SPI bus
+  inline static void endTransaction(void) {
+
+  }
+
+  // Disable the SPI bus
+  static void end();
+
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setBitOrder(uint8_t bitOrder) {
+  }
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setDataMode(uint8_t dataMode) {
+//    SPCR = (SPCR & ~SPI_MODE_MASK) | dataMode;
+  }
+  // This function is deprecated.  New applications should use
+  // beginTransaction() to configure SPI settings.
+  inline static void setClockDivider(uint8_t clockDiv) {
+  }
+  // These undocumented functions should not be used.  SPI.transfer()
+  // polls the hardware flag which is automatically cleared as the
+  // AVR responds to SPI's interrupt
+  inline static void attachInterrupt() { /*SPCR |= _BV(SPIE)*/; }
+  inline static void detachInterrupt() { /*SPCR &= ~_BV(SPIE)*/; }
+
+private:
+  static uint8_t interruptMask; // which interrupts to mask
+  static uint8_t interruptSave; // temp storage, to restore state
+  #ifdef SPI_TRANSACTION_MISMATCH_LED
+  static uint8_t inTransactionFlag;
+  #endif
+};
+
+extern SPIClass1 SPI1;
+
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+/*
+ * Copyright (c) 2010 by Cristian Maglie <c.maglie@bug.st>
+ * SPI Master library for arduino.
+ *
+ * This file is free software; you can redistribute it and/or modify
+ * it under the terms of either the GNU General Public License version 2
+ * or the GNU Lesser General Public License version 2.1, both as
+ * published by the Free Software Foundation.
+ */
+
+#ifndef _SPI_H_INCLUDED
+#define _SPI_H_INCLUDED
+
+#include "variant.h"
+#include "wiring_constants.h"
+
+#define SPI_MODE0 0x02
+#define SPI_MODE1 0x00
+#define SPI_MODE2 0x03
+#define SPI_MODE3 0x01
+
+class SPIClass {
+  public:
+	SPIClass(SERCOM *p_sercom, uint8_t uc_pinMISO, uint8_t uc_pinSCK, uint8_t uc_pinMOSI);
+
+	byte transfer(uint8_t data);
+
+	// SPI Configuration methods
+	void attachInterrupt();
+	void detachInterrupt();
+
+	void begin();
+	void end();
+	
+	void setBitOrder(BitOrder order);
+	void setDataMode(uint8_t uc_mode);
+	void setClockDivider(uint8_t uc_div);
+
+  private:
+	SERCOM *_p_sercom;
+	uint8_t _uc_pinMiso;
+	uint8_t _uc_pinMosi;
+	uint8_t _uc_pinSCK;
+};
+
+#if SPI_INTERFACES_COUNT > 0
+  extern SPIClass SPI;
+#endif
+
+#endif
+
+
+#endif

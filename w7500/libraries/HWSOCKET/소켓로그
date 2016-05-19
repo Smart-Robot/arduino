@@ -1,0 +1,174 @@
+
+
+
+<<<<<< connection 전까지 >>>>>>                                                 <<<<<< connection 전까지 >>>>>>                           
+                                                                                                                                          
+TIC100US : WZTOE_TIC100US[0x46002000] = tic[0x7D0]                              setTIC100US : WZTOE_TIC100US[0x46002000] = tic[0x7D0]     
+setSHAR                                                                         setMR : WZTOE_MR[0x46002300] = mr[0x80]                   
+setSIPR                                                                         setSHAR                                                   
+setGAR                                                                          setSIPR                                                   
+setSUBR                                                                         setGAR                                                    
+getSHAR                                                                         setSUBR                                                   
+                                                                                setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x10]         
+MAC ADDRESS 0 8 220 1 2 3                                                       getSn_CR                                                  
+getSIPR                                                                         setSn_IR : WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1F]       
+IP ADDRESS 192 168 77 9                                                         setSn_ICR : WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1F]      
+getGAR                                                                          setSn_MR : WZTOE_Sn_MR(sn)[0x46010000] = mr[0x1]          
+GW ADDRESS 192 168 77 1                                                         setSn_PORT : WZTOE_Sn_PORT(sn)[0x46010114] = port[0x1388] 
+getSUBR                                                                         setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x1]          
+SN MASK 255 255 255 0                                                           getSn_CR                                                  
+Dsocket sn[0] protocol[1] port[1388] flag[0]                                    setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x2]          
+close sn[0]                                                                     getSn_CR                                                  
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x10]                               Chat server address:getSIPR                               
+getSn_CR                                                                        192.168.77.9                                              
+setSn_IR : WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1F]
+setSn_ICR : WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1F]
+setSn_MR : WZTOE_Sn_MR(sn)[0x46010000] = mr[0x1]
+setSn_PORT : WZTOE_Sn_PORT(sn)[0x46010114] = port[0x1388]
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x1]
+getSn_CR
+Clisten sn[0]
+getSn_MR
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x2]
+getSn_CR
+
+
+<<<<<< connection 실행 >>>>>>                                                   <<<<<< connection 실행 >>>>>>                               
+                                                                                                                                            
+setSn_IR :  WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1]                                                                                          
+setSn_ICR : WZTOE_Sn_ICR(sn)[0x46010028] = icr[0x1]                               setSn_CR :   WZTOE_Sn_CR(sn)  [0x46050010] = cr[0x10]           
+E                                                                                 getSn_CR                                                    
+                                                                                  setSn_IR :   WZTOE_Sn_ICR(sn) [0x46050028] = icr[0x1F]         
+                                                                                  setSn_ICR :  WZTOE_Sn_ICR(sn) [0x46050028] = icr[0x1F]        
+                                                                                  setSn_MR :   WZTOE_Sn_MR(sn)  [0x46050000] = mr[0x1]            
+                                                                                  setSn_PORT : WZTOE_Sn_PORT(sn)[0x46050114] = port[0x1388]   
+                                                                                  setSn_CR :   WZTOE_Sn_CR(sn)  [0x46050010] = cr[0x1]            
+                                                                                  getSn_CR                                                    
+                                                                                  setSn_CR :   WZTOE_Sn_CR(sn)[0x46050010] = cr[0x2]            
+                                                                                  getSn_CR                                                    
+                                                                                                                                            
+
+
+
+
+<<<<<< 송수신  >>>>>>                                                             <<<<<< 송수신  >>>>>>                                                            
+getSn_MR                                                                          We have a new client                                                             
+recv sn[0] buf[20000664] len[6]                                                   Hello, client!                                                                   
+getSn_RxMAX                                                                       getSn_MR                                                                         
+getSn_RXBUF_SIZE                                                                  recv sn[0] buf[20004FC0] len[1]                                                  
+wiz_recv_data : sn[0x0], wizdata[0x20000664], len[0x6]                            getSn_RxMAX                                                                      
+getSn_RX_RD                                                                       getSn_RXBUF_SIZE                                                                 
+WIZCHIP_READ_BUF : BaseAddr[0x46030000], pBuf[0x20000664], len[0x6]               wiz_recv_data : sn[0x0], wizdata[0x20004FC0], len[0x1]                           
+setSn_RX_RD : WZTOE_Sn_RX_RD(sn)[0x46010228] = rxrd[0x6]                          getSn_RX_RD                                                                      
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x40]                                 WIZCHIP_READ_BUF : BaseAddr[0x46030000], pBuf[0x20004FC0], len[0x1]              
+getSn_CR                                                                          setSn_RX_RD : WZTOE_Sn_RX_RD(sn)[0x46010228] = rxrd[0x1]                         
+Fsend sn[0] buf[20000664] len[6]                                                  setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x40]                                
+getSn_MR                                                                          getSn_CR                                                                         
+getSn_TxMAX                                                                       send sn[0] buf[20004FC7] len[1]                                                  
+getSn_TXBUF_SIZE                                                                  getSn_MR                                                                         
+getSn_TX_FSR                                                                      getSn_TxMAX                                                                      
+wiz_send_data : sn[0x0], wizdata[0x20000664], len[0x6]                            getSn_TXBUF_SIZE                                                                 
+getSn_TX_WR                                                                       getSn_TX_FSR                                                                     
+WIZCHIP_WRITE_BUF : BaseAddr[0x46020000], ptr[0xB97C], pBuf[0x20000664], len[0x6] wiz_send_data : sn[0x0], wizdata[0x20004FC7], len[0x1]                           
+setSn_TX_WR : WZTOE_Sn_TX_WR(sn)[0x4601020C] = txwr[0xB982]                       getSn_TX_WR                                                                      
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x20]                                 WIZCHIP_WRITE_BUF : BaseAddr[0x46020000], ptr[0xAE27], pBuf[0x20004FC7], len[0x1]
+getSn_CR                                                                          setSn_TX_WR : WZTOE_Sn_TX_WR(sn)[0x4601020C] = txwr[0xAE28]                      
+G                                                                                 setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x20]                                
+                                                                                  getSn_CR                                                                         
+
+
+
+
+
+
+
+
+setSn_CR : WZTOE_Sn_CR(sn)[0x46050010] = cr[0x10]
+getSn_CR
+setSn_IR : WZTOE_Sn_ICR(sn)[0x46050028] = icr[0x1F]
+setSn_ICR : WZTOE_Sn_ICR(sn)[0x46050028] = icr[0x1F]
+setSn_MR : WZTOE_Sn_MR(sn)[0x46050000] = mr[0x1]
+setSn_PORT : WZTOE_Sn_PORT(sn)[0x46050114] = port[0x1388]
+setSn_CR : WZTOE_Sn_CR(sn)[0x46050010] = cr[0x1]
+getSn_CR
+setSn_CR : WZTOE_Sn_CR(sn)[0x46050010] = cr[0x2]
+getSn_CR
+
+
+22222222222222222222222222222
+getSn_MR
+recv sn[0] buf[20004FC0] len[1]
+getSn_RxMAX
+getSn_RXBUF_SIZE
+wiz_recv_data : sn[0x0], wizdata[0x20004FC0], len[0x1]
+getSn_RX_RD
+WIZCHIP_READ_BUF : BaseAddr[0x46030000], pBuf[0x20004FC0], len[0x1]
+setSn_RX_RD : WZTOE_Sn_RX_RD(sn)[0x46010228] = rxrd[0x1]
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x40]
+getSn_CR
+send sn[0] buf[20004FC7] len[1]
+getSn_MR
+getSn_TxMAX
+getSn_TXBUF_SIZE
+getSn_TX_FSR
+wiz_send_data : sn[0x0], wizdata[0x20004FC7], len[0x1]
+getSn_TX_WR
+WIZCHIP_WRITE_BUF : BaseAddr[0x46020000], ptr[0x27FB], pBuf[0x20004FC7], len[0x1]
+setSn_TX_WR : WZTOE_Sn_TX_WR(sn)[0x4601020C] = txwr[0x27FC]
+setSn_CR : WZTOE_Sn_CR(sn)[0x46010010] = cr[0x20]
+getSn_CR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

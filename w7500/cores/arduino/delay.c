@@ -1,0 +1,370 @@
+#include "delay.h"
+#include "Arduino.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+///////  추가 시작
+volatile uint32_t startMillis, endMillis, millisCnt = 0;
+///////  추가 끝
+
+/** Tick Counter united by ms */
+static volatile uint32_t _ulTickCount=0 ;
+
+uint32_t millis( void )
+{
+#if 0    // porting
+    if(millisCnt == 0)
+    {
+        startMillis = *(volatile unsigned int *)0x4000530C;       // 현재의 System clock 값을 읽는다.
+        millisCnt ++;
+        return 0;
+    }
+    endMillis = *(volatile unsigned int *)0x4000530C;         // 현재의 System clock 값을 읽는다.
+    return (endMillis - startMillis) / 10000;
+
+#else    // porting
+// todo: ensure no interrupts
+  return _ulTickCount ;
+#endif    // porting
+}
+
+
+
+// Interrupt-compatible version of micros
+// Theory: repeatedly take readings of SysTick counter, millis counter and SysTick interrupt pending flag.
+// When it appears that millis counter and pending is stable and SysTick hasn't rolled over, use these
+// values to calculate micros. If there is a pending SysTick, add one to the millis counter in the calculation.
+///////// 추가 시작
+volatile uint32_t startMicros, endMicros, microsCnt = 0;
+///////// 추가 끝
+uint32_t micros( void )
+{
+#if 1
+    if(microsCnt == 0)
+    {
+        startMicros = *(volatile unsigned int *)0x4000530C;       // 현재의 System clock 값을 읽는다.
+        microsCnt ++;
+        return 0;
+    }
+    endMicros = *(volatile unsigned int *)0x4000530C;         // 현재의 System clock 값을 읽는다.
+    return (endMicros - startMicros) / 10;
+#else
+  uint32_t ticks, ticks2;
+  uint32_t pend, pend2;
+  uint32_t count, count2;
+
+  ticks2  = SysTick->VAL;
+  pend2   = !!(SCB->ICSR & SCB_ICSR_PENDSTSET_Msk)  ;
+  count2  = _ulTickCount ;
+
+  do
+  {
+    ticks=ticks2;
+    pend=pend2;
+    count=count2;
+    ticks2  = SysTick->VAL;
+    pend2   = !!(SCB->ICSR & SCB_ICSR_PENDSTSET_Msk)  ;
+    count2  = _ulTickCount ;
+  } while ((pend != pend2) || (count != count2) || (ticks < ticks2));
+
+  return ((count+pend) * 1000) + (((SysTick->LOAD  - ticks)*(1048576/(VARIANT_MCK/1000000)))>>20) ;
+  // this is an optimization to turn a runtime division into two compile-time divisions and
+  // a runtime multiplication and shift, saving a few cycles
+#endif
+}
+
+void delay( uint32_t ms )
+{
+  if ( ms == 0 )
+  {
+    return ;
+  }
+
+  uint32_t start = _ulTickCount ;
+
+  do
+  {
+    yield() ;
+  } while ( _ulTickCount - start <= (ms-1) ) ;
+}
+
+
+void WDT_SetWDTLoad_01(unsigned int Load)
+{
+    //WDT->WDTLock = 0x1ACCE551;
+    *(volatile unsigned int *)(0x40000000 + 0xC00) = 0x1ACCE551;
+    //WDT->WDTLoad = Load;
+    *(volatile unsigned int *)(0x40000000 + 0x00) = Load;
+    //WDT->WDTLock = 0x1;
+    *(volatile unsigned int *)(0x40000000 + 0xC00) = 0x1;
+}
+
+
+typedef struct
+{
+  __IO   uint32_t  DATA;          /*!< Offset: 0x000 Data Register    (R/W) */
+  __IO   uint32_t  STATE;         /*!< Offset: 0x004 Status Register  (R/W) */
+  __IO   uint32_t  CTRL;          /*!< Offset: 0x008 Control Register (R/W) */
+  union {
+    __I    uint32_t  STATUS;   /*!< Offset: 0x00C Interrupt Status Register (R/ ) */
+    __O    uint32_t  CLEAR;    /*!< Offset: 0x00C Interrupt Clear Register ( /W) */
+    }INT;
+  __IO   uint32_t  BAUDDIV;       /*!< Offset: 0x010 Baudrate Divider Register (R/W) */
+
+} UART2_TypeDef_01;
+
+#define W7500x_APB1_BASE_01         (0x40000000UL)
+#define W7500x_UART2_BASE_01        (W7500x_APB1_BASE_01 + 0x00006000UL)
+
+#define UART2_01             ((UART2_TypeDef_01 *)   W7500x_UART2_BASE_01)
+
+
+#define UART2_STATE_RX_BUF_FULL		   (0x01ul << 1)		// RX buffer full, read only.
+
+uint8_t Uart2Getc_01(uint32_t timeout)
+{
+	uint32_t loop_cnt=0;
+
+	while( (UART2_01->STATE & UART2_STATE_RX_BUF_FULL) == 0)
+	{
+//		if( timeout == 0)	continue;
+//		if( loop_cnt++ >= timeout )	return 0;
+		return 0;
+	}
+
+	return (UART2_01->DATA);
+}
+
+#if 0
+
+void SysTick_Handler( void )
+{
+  // Increment tick count each ms
+  _ulTickCount++ ;
+////// 새로 추가 테스트를 위해
+  if (_ulTickCount % 1000 == 0)                // 0.1s 
+  {
+//    WDT_IntClear();
+//    WDT_Init();
+//    WDT_Start();
+    WDT_SetWDTLoad_01(0xFF0000);
+  }
+
+  if (_ulTickCount % 1000 == 0)                // 1s 
+  {
+                 while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                 *(volatile unsigned long *) 0x4000D000 = '*';
+  }
+////// 새로 추가 테스트를 위해
+}
+
+#else
+
+int wdt_cnt = 0;
+int Timer10Cnt4dn = 0;
+char UartReceiveBuffer[5];
+
+// 시간을 필터로 사용한다.
+// 0.5s 마다 들어온 'U' 인지를 알아냄
+// 480 - 520사이의 것만 필터링 한다.
+// 의도는 0.5초 마다 5번의 'U'를 받는 경우에만 다운로드 기능이  동작하도록 하는 것임
+void SysTick_Handler(void)
+{
+///////////                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+///////////                *(volatile unsigned long *) 0x4000D000 = 'S';
+///////////    WDT_SetWDTLoad_01(0xFF0000);
+    _ulTickCount ++;                                     // 1ms
+    if (_ulTickCount % 10 == 0)                          // 10ms 
+    {
+        if (_ulTickCount % 100 == 0)                     // 100ms 
+        {
+///////////////////
+///////////////////
+///////////////////
+
+     WDT_SetWDTLoad_01(0xFF0000);
+//    if( ((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+//    *(volatile unsigned long *) 0x4000D000 = Uart2Getc_01(0);
+     if(Uart2Getc_01(0) == 'U' || UartReceiveBuffer[0] =='U')
+//     if(check_byte() == 'U')
+     {
+
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                *(volatile unsigned long *) 0x4000D000 = 'K';
+                	   wdt_cnt = 0;
+                     while(1)
+                       WDT_SetWDTLoad_01(10);
+
+
+         if(wdt_cnt == 0)
+         {
+             wdt_cnt ++;
+             Timer10Cnt4dn = 0;
+         }
+         else
+         {	
+             if(Timer10Cnt4dn > 45  && Timer10Cnt4dn < 55)
+             {
+
+#if 0
+                 while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                 *(volatile unsigned long *) 0x4000D000 = ((Timer10Cnt4dn / 10) + 0x30);
+
+                 while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+                 *(volatile unsigned long *) 0x4000D000 = ((Timer10Cnt4dn % 10) + 0x30);
+#endif
+              	 if(wdt_cnt == 2)
+                 {   
+                	   wdt_cnt = 0;
+                     WDT_SetWDTLoad_01(10);
+                     while(1);
+                 }
+                 wdt_cnt++;
+                 Timer10Cnt4dn = 0;
+             }
+#if 1
+             else if(Timer10Cnt4dn > 55)
+             {
+                 wdt_cnt = 0;
+                 Timer10Cnt4dn = 0;
+             }
+#endif
+         }
+    }
+///////////////////
+///////////////////
+///////////////////
+            if (_ulTickCount % 1000 == 0)                // 1s 
+            {
+//                *(volatile unsigned int *)0x44000000 ^= (1 << 8 | 1 << 5);   //GPIOx->DATA
+//                while( !((*(volatile unsigned long *) 0x4000D018) & (0x01 << 7)) ) ;
+//                *(volatile unsigned long *) 0x4000D000 = 'K';
+            }
+        }
+        Timer10Cnt4dn ++;
+    }
+//    return;
+}
+#endif
+
+void delayMicroseconds(uint32_t usec)
+{
+//    volatile uint32_t delay = usec/*us*/ * 10; // approximate loops per ms at 24 MHz, Debug config
+    volatile uint32_t startTick, endTick;
+
+    startTick = *(volatile unsigned int *)0x4000530C;       // 현재의 System clock 값을 읽는다.
+    endTick = startTick +  usec/*us*/ * 10;
+    while(endTick > *(volatile unsigned int *)0x4000530C);
+
+#if 0
+	unsigned int presc=0, ref=0, sot=1;
+	double ref_val=0.0, div_val=0.0, usec_val=0.0;
+        unsigned long int i=0,limit=0;
+	
+        if (usec <=0) return;
+	usec_val=usec * 1.0;
+	
+	if(usec <= 20)
+       {
+            
+			  
+			if(usec == 1) limit = usec * 2;
+			else if(usec == 2) limit = usec * 6;
+			else if(usec == 3) limit = usec * 8;
+			else if(usec == 4) limit = usec * 9;
+			else if(usec == 5) limit = usec * 9;
+			else limit = usec * 11;
+           
+			for(i=0; i <= limit; i++);
+                {
+                  ; //asm("NOP");
+                }  
+                return;
+         }  
+    else if(usec <=1363)
+	{
+		presc=TC_CTRLA_PRESCALER_DIV1;
+		div_val=1.0;
+	        ref = (uint16_t)(usec_val * 48.0 / div_val);
+                if((usec > 20) & (usec <=60)) ref= ref - 905;
+			if(usec > 60) ref= ref - 921;
+	}	
+
+        else if((usec > 1363)  & (usec <= 5461))
+	{
+		presc=TC_CTRLA_PRESCALER_DIV4;
+		div_val=4.0;
+		ref = (uint16_t)(usec_val * 48.0 / div_val);
+                
+	}	
+	else if((usec > 5461) & (usec <= 10922))
+	{	
+		presc=TC_CTRLA_PRESCALER_DIV8;
+		div_val=8.0;
+		ref = (uint16_t)(usec_val * 48.0 / div_val);
+	}	
+	else if((usec > 10922) & (usec <= 21845))
+	{
+		presc=TC_CTRLA_PRESCALER_DIV16;
+		div_val=16.0;
+		ref = (uint16_t)(usec_val * 48.0 / div_val);
+	}	
+	else if(usec > 21845)
+	{
+		presc=TC_CTRLA_PRESCALER_DIV64;
+		div_val=64.0;
+		ref = (uint16_t)(usec_val * 48.0 / div_val);
+	}
+    else;
+    
+    
+	GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID( GCM_TC4_TC5 ));
+	
+	 TC4->COUNT16.CTRLA.reg &=~(TC_CTRLA_ENABLE);
+      TC4->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | presc;
+      TC4->COUNT16.READREQ.reg = 0x4002;
+      TC4->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE;
+      
+	  
+	  while(TC4->COUNT16.COUNT.reg < ref);
+	  	
+return;
+#endif
+}
+
+#ifdef __cplusplus
+}
+#endif

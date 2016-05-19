@@ -1,0 +1,8 @@
+name=OLED_TEST
+version=1.0
+author=Roger Clark
+email=
+sentence=Serial Peripheral Interface
+paragraph=OLED_TEST for W7500
+url=
+architectures=W7500
